@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce;
 
 use Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper;
-use Ekyna\Bundle\SettingBundle\Manager\SettingsManagerInterface;
+use Ekyna\Bundle\SettingBundle\Manager\SettingManagerInterface;
 use Ekyna\Component\Commerce\Shipment\Gateway\AbstractPlatform;
+use Ekyna\Component\Commerce\Shipment\Gateway\GatewayInterface;
 use Ekyna\Component\Commerce\Shipment\Gateway\PlatformActions;
 use Ekyna\Component\GlsUniBox\Api\Service;
 use Ekyna\Component\GlsUniBox\Exception\InvalidArgumentException;
@@ -18,40 +21,17 @@ use Symfony\Component\Config\Definition;
  */
 class GlsPlatform extends AbstractPlatform
 {
-    const NAME = 'GLS';
+    private const NAME = 'GLS';
 
-    /**
-     * @var NumberGeneratorInterface
-     */
-    protected $numberGenerator;
-
-    /**
-     * @var SettingsManagerInterface
-     */
-    protected $settingManager;
-
-    /**
-     * @var ConstantsHelper
-     */
-    protected $constantsHelper;
-
-    /**
-     * @var array
-     */
-    protected $defaultConfig;
+    protected NumberGeneratorInterface $numberGenerator;
+    protected SettingManagerInterface $settingManager;
+    protected ConstantsHelper $constantsHelper;
+    protected array $defaultConfig;
 
 
-    /**
-     * Constructor.
-     *
-     * @param NumberGeneratorInterface $numberGenerator
-     * @param SettingsManagerInterface $settingManager
-     * @param ConstantsHelper          $constantsHelper
-     * @param array                    $defaultConfig
-     */
     public function __construct(
         NumberGeneratorInterface $numberGenerator,
-        SettingsManagerInterface $settingManager,
+        SettingManagerInterface $settingManager,
         ConstantsHelper $constantsHelper,
         array $defaultConfig = []
     ) {
@@ -61,28 +41,19 @@ class GlsPlatform extends AbstractPlatform
         $this->defaultConfig = $defaultConfig;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getName()
+    public function getName(): string
     {
         return static::NAME;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getActions()
+    public function getActions(): array
     {
         return [
             PlatformActions::PRINT_LABELS,
         ];
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function createGateway($name, array $config = [])
+    public function createGateway(string $name, array $config = []): GatewayInterface
     {
         $class = sprintf('Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\Gateway\%sGateway', $config['service']);
         if (!class_exists($class)) {
@@ -99,20 +70,13 @@ class GlsPlatform extends AbstractPlatform
         return $gateway;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getConfigDefaults()
+    public function getConfigDefaults(): array
     {
         return $this->defaultConfig;
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function createConfigDefinition(Definition\Builder\NodeDefinition $rootNode)
+    protected function createConfigDefinition(Definition\Builder\NodeDefinition $rootNode): void
     {
-        /** @noinspection PhpUndefinedMethodInspection */
         $rootNode
             ->children()
                 ->scalarNode('deposit_number')

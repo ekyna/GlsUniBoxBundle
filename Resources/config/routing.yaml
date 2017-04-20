@@ -1,5 +1,4 @@
 ekyna_glsunibox_label_debug:
     path: /glsunibox/label/debug
-    defaults:
-        _controller: EkynaGlsUniBoxBundle:Label:debug
+    controller: Ekyna\Bundle\GlsUniBoxBundle\Controller\LabelController
     methods: [GET]

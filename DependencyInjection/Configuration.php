@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\GlsUniBoxBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -12,19 +14,21 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('ekyna_gls_uni_box');
+        $builder = new TreeBuilder('ekyna_gls_uni_box');
 
-        $rootNode
+        $node = $builder->getRootNode();
+
+        $node
             ->children()
                 ->arrayNode('generator')
                     ->children()
-                        ->scalarNode('path')->isRequired()->cannotBeEmpty()->end()
+                        ->scalarNode('path')
+                            ->isRequired()
+                            ->cannotBeEmpty()
+                            ->defaultValue('%kernel.root_dir%/../var/gls_uni_box_number')
+                            ->end()
                     ->end()
                 ->end()
                 ->arrayNode('client')
@@ -36,6 +40,6 @@ class Configuration implements ConfigurationInterface
                 ->end()
             ->end();
 
-        return $treeBuilder;
+        return $builder;
     }
 }

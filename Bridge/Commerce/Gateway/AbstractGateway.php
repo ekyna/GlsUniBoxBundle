@@ -1,16 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\Gateway;
 
+use DateTime;
+use Decimal\Decimal;
 use Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper;
-use Ekyna\Bundle\SettingBundle\Manager\SettingsManagerInterface;
+use Ekyna\Bundle\SettingBundle\Manager\SettingManagerInterface;
 use Ekyna\Component\Commerce\Exception\ShipmentGatewayException;
-use Ekyna\Component\Commerce\Shipment\Entity\AbstractShipmentLabel;
 use Ekyna\Component\Commerce\Shipment\Gateway;
 use Ekyna\Component\Commerce\Shipment\Model as Shipment;
 use Ekyna\Component\GlsUniBox\Api;
 use Ekyna\Component\GlsUniBox\Generator\NumberGeneratorInterface;
 use Ekyna\Component\GlsUniBox\Renderer\LabelRenderer;
+use Exception;
 use libphonenumber\PhoneNumber;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
@@ -22,68 +26,31 @@ use libphonenumber\PhoneNumberUtil;
  */
 abstract class AbstractGateway extends Gateway\AbstractGateway
 {
-    const TRACKING_URL = 'https://gls-group.eu/FR/fr/suivi-colis?match=%s';
+    protected const TRACKING_URL = 'https://gls-group.eu/FR/fr/suivi-colis?match=%s';
 
-    /**
-     * @var NumberGeneratorInterface
-     */
-    protected $numberGenerator;
+    protected NumberGeneratorInterface $numberGenerator;
+    protected SettingManagerInterface  $settingManager;
+    protected ConstantsHelper          $constantsHelper;
 
-    /**
-     * @var SettingsManagerInterface
-     */
-    protected $settingManager;
+    private ?Api\Client      $client    = null;
+    private ?PhoneNumberUtil $phoneUtil = null;
 
-    /**
-     * @var ConstantsHelper
-     */
-    protected $constantsHelper;
-
-    /**
-     * @var Api\Client
-     */
-    private $client;
-
-    /**
-     * @var PhoneNumberUtil
-     */
-    private $phoneUtil;
-
-
-    /**
-     * Sets the number generator.
-     *
-     * @param NumberGeneratorInterface $numberGenerator
-     */
-    public function setNumberGenerator(NumberGeneratorInterface $numberGenerator)
+    public function setNumberGenerator(NumberGeneratorInterface $numberGenerator): void
     {
         $this->numberGenerator = $numberGenerator;
     }
 
-    /**
-     * Sets the setting manager.
-     *
-     * @param SettingsManagerInterface $settingManager
-     */
-    public function setSettingManager(SettingsManagerInterface $settingManager)
+    public function setSettingManager(SettingManagerInterface $settingManager): void
     {
         $this->settingManager = $settingManager;
     }
 
-    /**
-     * Sets the constants helper.
-     *
-     * @param ConstantsHelper $constantsHelper
-     */
-    public function setConstantsHelper(ConstantsHelper $constantsHelper)
+    public function setConstantsHelper(ConstantsHelper $constantsHelper): void
     {
         $this->constantsHelper = $constantsHelper;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getActions()
+    public function getActions(): array
     {
         return [
             Gateway\GatewayActions::SHIP,
@@ -93,18 +60,12 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
         ];
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getCapabilities()
+    public function getCapabilities(): int
     {
         return static::CAPABILITY_SHIPMENT; // | static::CAPABILITY_PARCEL
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function ship(Shipment\ShipmentInterface $shipment)
+    public function ship(Shipment\ShipmentInterface $shipment): bool
     {
         $this->supportShipment($shipment);
 
@@ -121,7 +82,7 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
 
         try {
             $response = $this->getClient()->send($request);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw new ShipmentGatewayException($e->getMessage(), $e->getCode(), $e);
         }
 
@@ -147,24 +108,18 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
         return true;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function track(Shipment\ShipmentDataInterface $shipment)
+    public function track(Shipment\ShipmentDataInterface $shipment): ?string
     {
         $this->supportShipment($shipment);
 
         if (!empty($number = $shipment->getTrackingNumber())) {
-            return sprintf(static::TRACKING_URL, $number);
+            return sprintf(self::TRACKING_URL, $number);
         }
 
         return null;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function printLabel(Shipment\ShipmentDataInterface $shipment, array $types = null)
+    public function printLabel(Shipment\ShipmentDataInterface $shipment, array $types = null): array
     {
         $this->supportShipment($shipment);
 
@@ -189,9 +144,9 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
                 $shipment->addLabel(
                     $this->createLabel(
                         $renderer->render($data),
-                        AbstractShipmentLabel::TYPE_SHIPMENT,
-                        AbstractShipmentLabel::FORMAT_PNG,
-                        AbstractShipmentLabel::SIZE_A6
+                        Shipment\ShipmentLabelInterface::TYPE_SHIPMENT,
+                        Shipment\ShipmentLabelInterface::FORMAT_PNG,
+                        Shipment\ShipmentLabelInterface::SIZE_A6
                     )
                 );
 
@@ -204,28 +159,22 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
                 return [$label];
             }
         }
-        
+
         return [];
     }
 
     /**
      * Returns the default label types.
-     *
-     * @return array
      */
-    protected function getDefaultLabelTypes()
+    protected function getDefaultLabelTypes(): array
     {
         return [Shipment\ShipmentLabelInterface::TYPE_SHIPMENT];
     }
 
     /**
      * Creates an api request.
-     *
-     * @param Shipment\ShipmentInterface $shipment
-     *
-     * @return Api\Request
      */
-    protected function createRequest(Shipment\ShipmentInterface $shipment)
+    protected function createRequest(Shipment\ShipmentInterface $shipment): Api\Request
     {
         $sale = $shipment->getSale();
 
@@ -237,14 +186,12 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
         }
 
         // Force weight > 100g
-        if (1 === bccomp(0.1, $weight, 2)) {
-            $weight = 0.1;
-        }
+        $weight = max($weight, new Decimal('0.1'));
 
         $request = new Api\Request($this->numberGenerator->generate());
         $request
-            ->setDate(new \DateTime())
-            ->setWeight($weight)
+            ->setDate(new DateTime())
+            ->setWeight($weight->toFixed(3))
             ->setReceiverReference($sale->getNumber())
             ->setReceiverReference2($shipment->getNumber());
 
@@ -293,12 +240,7 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
         return $request;
     }
 
-    /**
-     * Returns the api client.
-     *
-     * @return Api\Client
-     */
-    protected function getClient()
+    protected function getClient(): Api\Client
     {
         if (null !== $this->client) {
             return $this->client;
@@ -312,13 +254,9 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
     }
 
     /**
-     * Formats the phone number.
-     *
-     * @param mixed $number
-     *
-     * @return string
+     * @param PhoneNumber|string $number
      */
-    private function formatPhoneNumber($number)
+    private function formatPhoneNumber($number): string
     {
         if ($number instanceof PhoneNumber) {
             if (null === $this->phoneUtil) {
@@ -328,6 +266,6 @@ abstract class AbstractGateway extends Gateway\AbstractGateway
             return $this->phoneUtil->format($number, PhoneNumberFormat::INTERNATIONAL);
         }
 
-        return (string) $number;
+        return (string)$number;
     }
 }

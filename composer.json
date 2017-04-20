@@ -17,8 +17,8 @@
     "homepage": "https://github.com/ekyna/GlsUniBoxBundle",
     "license": "MIT",
     "require": {
-        "php": ">=7.0",
-        "ekyna/commerce-bundle": "0.7.x-dev",
+        "php": ">=7.4",
+        "ekyna/commerce-bundle": "0.8.x-dev",
         "ekyna/gls-uni-box": "0.7.x-dev"
     },
     "autoload": {
