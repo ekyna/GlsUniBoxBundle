@@ -1,0 +1,370 @@
+/* http://meyerweb.com/eric/tools/css/reset/
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+
+body {
+    line-height: 1;
+}
+
+ol, ul {
+    list-style: none;
+}
+
+blockquote, q {
+    quotes: none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/* ----------------------- GLOBAL ----------------------- */
+
+@font-face {
+    font-family: 'Swiss 721 Condensed BT';
+    font-style: normal;
+    font-weight: normal;
+    src: local('Swiss 721 Condensed BT'), url('../fonts/Swiss721CondensedBT.woff') format('woff');
+}
+
+html, body {
+    width: 100mm;
+}
+
+body {
+    position: relative;
+    /*font-family: "Swiss 721 Condensed BT", Arial, sans-serif;*/
+    font-family: Arial, sans-serif;
+    background: #eee;
+}
+
+.etiquette {
+    margin: 20px;
+    position: relative;
+    background-color: #fff;
+    height: 154mm;
+    width: 102mm;
+}
+
+/* ----------------------- CONTROL BARS ----------------------- */
+
+.control-bar {
+    position: absolute;
+    background-color: #000;
+}
+
+#control-bar-1 {
+    top: 0;
+    left: 0;
+    width: 102mm;
+    height: 3mm;
+}
+
+#control-bar-2 {
+    top: 17mm;
+    left: 2mm;
+    width: 100mm;
+    height: .5mm;
+}
+
+#control-bar-3 {
+    top: 29.5mm;
+    left: 1mm;
+    width: 100mm;
+    height: .5mm;
+}
+
+#control-bar-4 {
+    top: 62.5mm;
+    left: 1mm;
+    width: 100mm;
+    height: .25mm;
+}
+
+/* ----------------------- LINES ----------------------- */
+
+.line {
+    position: absolute;
+}
+
+/* ----------------------- FRAMES ----------------------- */
+
+.frame {
+    position: absolute;
+    border: .25mm solid #000;
+    box-sizing: border-box;
+}
+
+#frame-1 {
+    left: 1mm;
+    top: 70mm;
+    width: 78.25mm;
+    height: 34.25mm;
+}
+
+#frame-2 {
+    left: 1mm;
+    top: 104mm;
+    width: 78.25mm;
+    height: 31.25mm;
+}
+
+#frame-3 {
+    left: 1mm;
+    top: 135mm;
+    width: 78.25mm;
+    height: 17.25mm;
+}
+
+/* ----------------------- DATA ----------------------- */
+
+.data {
+    position: absolute;
+}
+
+.center {
+    text-align: center;
+}
+
+.alt {
+    background-color: #000;
+    color: #fff;
+}
+
+/* ------- Control bar 1 ------- */
+
+/* Clé tri expedition */
+#T110 {
+    left: 2mm;
+    top: 5mm;
+    font-size: 28pt;
+}
+
+/* Clé de tri réception */
+#T310 {
+    top: 3mm;
+    left: 45mm;
+    width: 10mm;
+    height: 14mm;
+    font-size: 20pt;
+    line-height: 14mm;
+}
+
+/* Dépôt GLS livraison */
+#T101 {
+    top: 3mm;
+    left: 72mm;
+    width: 30mm;
+    height: 14mm;
+    font-size: 20pt;
+    line-height: 14mm;
+}
+
+/* Pays livraison Euro express */
+#T100, #T105 {
+    top: 3mm;
+    left: 55mm;
+    width: 17mm;
+    height: 14mm;
+    font-size: 23pt;
+    line-height: 14mm;
+}
+
+/* ------- Control bar 2 ------- */
+
+/* Code tournée */
+#T320 {
+    top: 19.25mm;
+    left: 2mm;
+    font-size: 24pt;
+    font-weight: bold;
+}
+
+/* "ZipCode" */
+#T8951 {
+    top: 18mm;
+    left: 33.8mm;
+    font-size: 9pt;
+}
+
+/* Code postal */
+#T330 {
+    top: 23mm;
+    left: 32mm;
+    font-size: 16pt;
+}
+
+/* "Your GLS Track ID" */
+#T8952 {
+    top: 18mm;
+    left: 54mm;
+    font-size: 9pt;
+}
+
+/* GLS Track ID */
+#T8913 {
+    top: 25mm;
+    left: 53.9mm;
+    font-size: 11pt;
+}
+
+/* Shop Delivery Service */
+#T200 {
+    top: 20.3mm;
+    left: 83mm;
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+/* ------- Control bar 3 ------- */
+
+/* Code datamatrix principal */
+#T8902 {
+    /*TODO*/
+}
+
+/* Code datamatrix secondaire */
+#T8903 {
+    /*TODO*/
+}
+
+/* ------- Control bar 4 ------- */
+
+/* Dépôt GLS expé */
+#T500 {
+    top: 64.8mm;
+    left: 1mm;
+    font-size: 13pt;
+}
+
+/* Date */
+#T540 {
+    top: 66.5mm;
+    left: 24mm;
+    font-size: 6pt;
+}
+
+/* Heure */
+#T541 {
+    top: 66.5mm;
+    left: 35mm;
+    font-size: 6pt;
+}
+
+/* "kg" */
+#kg {
+    top: 65.2mm;
+    left: 52mm;
+    font-size: 11pt;
+    text-transform: uppercase;
+}
+
+/* Poids */
+#T530 {
+    top: 65.2mm;
+    left: 41mm;
+    font-size: 11pt;
+}
+
+/* T8904 "/" T8905 */
+#numbers {
+    top: 65mm;
+    left: 64mm;
+    font-size: 6pt;
+}
+
+
+/* ------- Frame 4 ------- */
+
+#frame-4 {
+    left: 101.25mm;
+    top: 70mm;
+    width: 82.25mm;
+    height: 22.25mm;
+    transform: rotate(90deg);
+    transform-origin: top left;
+}
+
+#expediteur {
+    font-size: 9pt;
+    font-weight: bold;
+    top: 1.2mm;
+    left: 0.5mm;
+}
+
+/* Client / Contact ID */
+#T8915 {
+    font-size: 8.6pt;
+    top: 1.3mm;
+    left: 20.2mm;
+}
+
+/* Sender address */
+#T810 {
+    top: 5.5mm;
+    left: 2.2mm;
+    font-size: 8pt;
+    line-height: 1.4;
+}
+
+/* Sender country / postal code / city */
+#T821 {
+    left: 2.2mm;
+    font-size: 9pt;
+    top: 18.2mm;
+}
+
+/* ----------------------- DEBUG ----------------------- */
+
+img {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    opacity: .4;
+    width: 102mm;
+    height: auto;
+}
+
+.etiquette {
+    background-color: transparent;
+}
+
+#debug {
+    position: absolute;
+    top: 160mm;
+}
