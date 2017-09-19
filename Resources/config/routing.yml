@@ -1,0 +1,5 @@
+ekyna_glsunibox_etiquette_render:
+    path: /glsunibox/etiquette/render
+    defaults:
+        _controller: EkynaGlsUniBoxBundle:Etiquette:render
+    methods: [GET]
