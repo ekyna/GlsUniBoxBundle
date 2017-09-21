@@ -255,12 +255,26 @@ body {
 
 /* Code datamatrix principal */
 #T8902 {
-    /*TODO*/
+    border: .25mm solid #999;
+    top: 32mm;
+    width: 25mm;
+    height: 25mm;
+    left: 1mm;
+}
+
+#T8902 img {
+    width: 100%;
+    height: auto;
 }
 
 /* Code datamatrix secondaire */
 #T8903 {
     /*TODO*/
+}
+
+#T8903 img {
+    width: 100%;
+    height: auto;
 }
 
 /* ------- Control bar 4 ------- */
@@ -351,7 +365,7 @@ body {
 
 /* ----------------------- DEBUG ----------------------- */
 
-img {
+#img-model {
     position: absolute;
     top: 0;
     left: 20px;

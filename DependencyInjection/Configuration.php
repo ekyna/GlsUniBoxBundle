@@ -22,9 +22,13 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-                ->scalarNode('deposit_number')->isRequired()->end() // T8700
-                ->scalarNode('customer_code')->isRequired()->end() // T8915
-                ->scalarNode('contact_id')->isRequired()->end() // T8914
+                ->arrayNode('client')
+                    ->children()
+                        ->scalarNode('deposit_number')->isRequired()->end() // T8700
+                        ->scalarNode('customer_code')->isRequired()->end() // T8915
+                        ->scalarNode('contact_id')->isRequired()->end() // T8914
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;
