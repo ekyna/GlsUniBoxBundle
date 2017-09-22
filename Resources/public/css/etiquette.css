@@ -157,6 +157,11 @@ body {
     position: absolute;
 }
 
+.datamatrix > img {
+    width: 22.3mm;
+    height: auto;
+}
+
 .center {
     text-align: center;
 }
@@ -255,26 +260,57 @@ body {
 
 /* Code datamatrix principal */
 #T8902 {
-    border: .25mm solid #999;
-    top: 32mm;
-    width: 25mm;
-    height: 25mm;
+    box-sizing: border-box;
+    top: 30.4mm;
+    width: 29.2mm;
+    height: 31mm;
     left: 1mm;
+    text-align: center;
 }
 
-#T8902 img {
-    width: 100%;
-    height: auto;
+#T8902 > div {
+    position: absolute;
+    width: 7mm;
+    height: 7mm;
+    border: 1.5mm solid #000;
+}
+
+#T8902 > div:nth-child(1) {
+    top: 0;
+    left: 0;
+    border-bottom: none;
+    border-right: none;
+}
+
+#T8902 > div:nth-child(2) {
+    top: 0;
+    right: 0;
+    border-bottom: none;
+    border-left: none;
+}
+
+#T8902 > div:nth-child(3) {
+    bottom: 0;
+    left: 0;
+    border-top: none;
+    border-right: none;
+}
+
+#T8902 > div:nth-child(4) {
+    bottom: 0;
+    right: 0;
+    border-top: none;
+    border-left: none;
+}
+
+#T8902 > img {
+    margin-top: 4.3mm;
 }
 
 /* Code datamatrix secondaire */
 #T8903 {
-    /*TODO*/
-}
-
-#T8903 img {
-    width: 100%;
-    height: auto;
+    top: 35mm;
+    left: 78.7mm;
 }
 
 /* ------- Control bar 4 ------- */
