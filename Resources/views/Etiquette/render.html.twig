@@ -43,12 +43,18 @@
         <div id="control-bar-3" class="control-bar"></div>
 
         <!-- Code datamatrix principal -->
-        <div id="T8902" class="data">
+        <div id="T8902" class="data datamatrix">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
             <img src="data:image/png;base64,{{ data['T8902']|barcode_datamatrix|raw }}"/>
         </div>
 
         <!-- Code datamatrix secondaire -->
-        {# TODO <div id="T8903" class="data">{{ data['T8904'] }}</div>#}
+        <div id="T8903" class="data datamatrix">
+            <img src="data:image/png;base64,{{ data['T8903']|barcode_datamatrix|raw }}"/>
+        </div>
 
         <div id="control-bar-4" class="control-bar"></div>
 
