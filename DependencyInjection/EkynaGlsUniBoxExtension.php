@@ -33,6 +33,7 @@ class EkynaGlsUniBoxExtension extends Extension
             $definition->addTag('ekyna_commerce.shipment.gateway_platform');
             $definition->addArgument(new Reference('ekyna_setting.manager'));
             $definition->addArgument(new Reference('templating'));
+            $definition->addArgument(new Reference('ekyna_commerce.constants_helper'));
 
             $container->setDefinition('ekyna_gls_uni_box.gateway_platform', $definition);
         }

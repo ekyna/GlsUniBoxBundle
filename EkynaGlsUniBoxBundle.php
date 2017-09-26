@@ -2,6 +2,8 @@
 
 namespace Ekyna\Bundle\GlsUniBoxBundle;
 
+use Ekyna\Component\GlsUniBox\Bridge\Symfony\DependencyInjection\TwigPathCompilerPass;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
@@ -11,4 +13,11 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
  */
 class EkynaGlsUniBoxBundle extends Bundle
 {
+    /**
+     * @inheritDoc
+     */
+    public function build(ContainerBuilder $container)
+    {
+        $container->addCompilerPass(new TwigPathCompilerPass());
+    }
 }

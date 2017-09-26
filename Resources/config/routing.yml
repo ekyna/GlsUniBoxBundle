@@ -1,5 +1,5 @@
-ekyna_glsunibox_etiquette_render:
-    path: /glsunibox/etiquette/render
+ekyna_glsunibox_label_debug:
+    path: /glsunibox/label/debug
     defaults:
-        _controller: EkynaGlsUniBoxBundle:Etiquette:render
+        _controller: EkynaGlsUniBoxBundle:Label:debug
     methods: [GET]
