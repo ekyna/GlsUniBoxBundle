@@ -1,0 +1,29 @@
+{
+    "name": "ekyna/gls-uni-box-bundle",
+    "description": "GLS Uni Box shipment bundle",
+    "type": "symfony-bundle",
+    "authors": [
+        {
+            "name": "Etienne Dauvergne",
+            "homepage": "http://ekyna.com"
+        }
+    ],
+    "keywords": [
+        "symfony",
+        "shipment",
+        "gls uni-box",
+        "bundle"
+    ],
+    "homepage": "https://github.com/ekyna/GlsUniBoxBundle",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.0",
+        "ekyna/commerce-bundle": "0.7.x-dev",
+        "ekyna/gls-uni-box": "0.7.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ekyna\\Bundle\\GlsUniBoxBundle\\": ""
+        }
+    }
+}

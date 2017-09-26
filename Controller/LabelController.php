@@ -13,7 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 class LabelController extends Controller
 {
     /**
-     * Etiquette render action.
+     * Label debug action.
      *
      * @return \Symfony\Component\HttpFoundation\Response
      */
