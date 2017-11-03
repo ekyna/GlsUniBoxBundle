@@ -164,6 +164,14 @@ class GlsPlatform extends AbstractPlatform
     /**
      * @inheritDoc
      */
+    public function supports(ActionInterface $action)
+    {
+        return $action instanceof PrintLabel;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getActions()
     {
         return [

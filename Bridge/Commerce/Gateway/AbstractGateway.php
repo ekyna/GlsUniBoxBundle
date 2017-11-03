@@ -101,6 +101,14 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     /**
      * @inheritDoc
      */
+    public function supports(ActionInterface $action)
+    {
+        return $action instanceof PrintLabel;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getActions(ShipmentInterface $shipment = null)
     {
         $actions = [
