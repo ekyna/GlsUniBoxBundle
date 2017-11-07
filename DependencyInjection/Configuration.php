@@ -24,9 +24,9 @@ class Configuration implements ConfigurationInterface
             ->children()
                 ->arrayNode('client')
                     ->children()
-                        ->scalarNode('deposit_number')->isRequired()->end() // T8700
-                        ->scalarNode('customer_code')->isRequired()->end() // T8915
-                        ->scalarNode('contact_id')->isRequired()->end() // T8914
+                        ->scalarNode('deposit_number')->isRequired()->cannotBeEmpty()->end() // T8700
+                        ->scalarNode('customer_code')->isRequired()->cannotBeEmpty()->end() // T8915
+                        ->scalarNode('contact_id')->isRequired()->cannotBeEmpty()->end() // T8914
                     ->end()
                 ->end()
             ->end();

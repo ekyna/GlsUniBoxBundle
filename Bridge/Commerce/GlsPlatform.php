@@ -38,22 +38,30 @@ class GlsPlatform extends AbstractPlatform
      */
     protected $constantsHelper;
 
+    /**
+     * @var array
+     */
+    protected $defaultConfig;
+
 
     /**
      * Constructor.
      *
      * @param SettingsManagerInterface $settingManager
      * @param EngineInterface          $templating
-     * @param ConstantsHelper $constantsHelper
+     * @param ConstantsHelper          $constantsHelper
+     * @param array                    $defaultConfig
      */
     public function __construct(
         SettingsManagerInterface $settingManager,
         EngineInterface $templating,
-        ConstantsHelper $constantsHelper
+        ConstantsHelper $constantsHelper,
+        array $defaultConfig = []
     ) {
         $this->settingManager = $settingManager;
         $this->templating = $templating;
         $this->constantsHelper = $constantsHelper;
+        $this->defaultConfig = $defaultConfig;
     }
 
     /**
@@ -94,6 +102,14 @@ class GlsPlatform extends AbstractPlatform
         $gateway->setConstantsHelper($this->constantsHelper);
 
         return $gateway;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getConfigDefaults()
+    {
+        return $this->defaultConfig;
     }
 
     /**
