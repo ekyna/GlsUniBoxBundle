@@ -210,10 +210,14 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
         $senderAddress = $this->addressResolver->resolveSenderAddress($shipment);
         $receiverAddress = $this->addressResolver->resolveReceiverAddress($shipment);
 
+        if (0 >= $weight = $shipment->getWeight()) {
+            $weight = $this->weightCalculator->calculateShipment($shipment);
+        }
+
         $request = new Api\Request();
         $request
             ->setDate(new \DateTime())
-            ->setWeight($shipment->getWeight())
+            ->setWeight($weight)
             ->setReceiverReference($sale->getNumber())
             ->setReceiverReference2($shipment->getNumber());
 
