@@ -20,5 +20,7 @@ class GBPGateway extends AbstractGateway
         $request = parent::createRequest($shipment);
 
         $request->setService(Service::GBP);
+
+        return $request;
     }
 }

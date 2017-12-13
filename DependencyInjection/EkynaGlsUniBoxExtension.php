@@ -3,6 +3,7 @@
 namespace Ekyna\Bundle\GlsUniBoxBundle\DependencyInjection;
 
 use Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\GlsPlatform;
+use Ekyna\Component\GlsUniBox\Generator\NumberGenerator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
@@ -23,13 +24,16 @@ class EkynaGlsUniBoxExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $definition = new Definition(GlsPlatform::class);
-        $definition->addTag('ekyna_commerce.shipment.gateway_platform');
-        $definition->addArgument(new Reference('ekyna_setting.manager'));
-        $definition->addArgument(new Reference('templating'));
-        $definition->addArgument(new Reference('ekyna_commerce.constants_helper'));
-        $definition->addArgument($config['client']);
+        $generatorDef = new Definition(NumberGenerator::class);
+        $generatorDef->addArgument($config['generator']['path']);
+        $container->setDefinition('ekyna_gls_uni_box.number_generator', $generatorDef);
 
-        $container->setDefinition('ekyna_gls_uni_box.gateway_platform', $definition);
+        $platformDef = new Definition(GlsPlatform::class);
+        $platformDef->addTag('ekyna_commerce.shipment.gateway_platform');
+        $platformDef->addArgument(new Reference('ekyna_gls_uni_box.number_generator'));
+        $platformDef->addArgument(new Reference('ekyna_setting.manager'));
+        $platformDef->addArgument(new Reference('ekyna_commerce.constants_helper'));
+        $platformDef->addArgument($config['client']);
+        $container->setDefinition('ekyna_gls_uni_box.gateway_platform', $platformDef);
     }
 }

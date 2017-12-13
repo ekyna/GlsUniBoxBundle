@@ -11,11 +11,11 @@ use Ekyna\Component\Commerce\Shipment\Model\AddressResolverAwareInterface;
 use Ekyna\Component\Commerce\Shipment\Model\AddressResolverAwareTrait;
 use Ekyna\Component\Commerce\Shipment\Model\ShipmentInterface;
 use Ekyna\Component\GlsUniBox\Api;
-use GuzzleHttp\Psr7\Response;
+use Ekyna\Component\GlsUniBox\Generator\NumberGenerator;
+use Ekyna\Component\GlsUniBox\Renderer\LabelRenderer;
 use libphonenumber\PhoneNumber;
 use libphonenumber\PhoneNumberFormat;
 use libphonenumber\PhoneNumberUtil;
-use Symfony\Component\Templating\EngineInterface;
 
 /**
  * Class AbstractGateway
@@ -27,14 +27,14 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     use AddressResolverAwareTrait;
 
     /**
+     * @var NumberGenerator
+     */
+    protected $numberGenerator;
+
+    /**
      * @var SettingsManagerInterface
      */
     protected $settingManager;
-
-    /**
-     * @var EngineInterface
-     */
-    protected $templating;
 
     /**
      * @var ConstantsHelper
@@ -53,23 +53,23 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
 
 
     /**
-     * Sets the settingManager.
+     * Sets the number generator.
+     *
+     * @param NumberGenerator $numberGenerator
+     */
+    public function setNumberGenerator($numberGenerator)
+    {
+        $this->numberGenerator = $numberGenerator;
+    }
+
+    /**
+     * Sets the setting manager.
      *
      * @param SettingsManagerInterface $settingManager
      */
     public function setSettingManager(SettingsManagerInterface $settingManager)
     {
         $this->settingManager = $settingManager;
-    }
-
-    /**
-     * Sets the templating engine.
-     *
-     * @param EngineInterface $templating
-     */
-    public function setTemplating(EngineInterface $templating)
-    {
-        $this->templating = $templating;
     }
 
     /**
@@ -129,7 +129,7 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
      *
      * @return array|null
      */
-    public function buildLabel(ShipmentInterface $shipment)
+    public function buildLabelData(ShipmentInterface $shipment)
     {
         if ($shipment->getGatewayName() !== $this->getName()) {
             return null;
@@ -142,31 +142,18 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
 
     /**
      * @param PrintLabel $action
-     *
-     * @return Response|null
      */
     protected function executePrintLabel(PrintLabel $action)
     {
+        $renderer = new LabelRenderer();
+
         $shipments = $action->getShipments();
 
-        $labels = [];
-
         foreach ($shipments as $shipment) {
-            if (null !== $label = $this->buildLabel($shipment)) {
-                $labels[] = $label;
+            if (null !== $data = $this->buildLabelData($shipment)) {
+                $action->addLabel($renderer->render($data));
             }
         }
-
-        if (empty($labels)) {
-            return null;
-        }
-
-        /** @noinspection PhpTemplateMissingInspection */
-        $rendered = $this->templating->render('@GlsUniBox/labels.html.twig', [
-            'labels' => $labels
-        ]);
-
-        return new Response(200, ['Content-Type' => 'text/html'], $rendered);
     }
 
     /**
@@ -214,7 +201,7 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
             $weight = $this->weightCalculator->calculateShipment($shipment);
         }
 
-        $request = new Api\Request();
+        $request = new Api\Request($this->numberGenerator->generate());
         $request
             ->setDate(new \DateTime())
             ->setWeight($weight)

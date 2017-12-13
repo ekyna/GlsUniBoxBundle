@@ -18,5 +18,5 @@ interface GlsGatewayInterface
      *
      * @return array|null
      */
-    public function buildLabel(ShipmentInterface $shipment);
+    public function buildLabelData(ShipmentInterface $shipment);
 }

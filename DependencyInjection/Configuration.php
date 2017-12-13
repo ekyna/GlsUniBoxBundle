@@ -22,6 +22,11 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
+                ->arrayNode('generator')
+                    ->children()
+                        ->scalarNode('path')->isRequired()->cannotBeEmpty()->end()
+                    ->end()
+                ->end()
                 ->arrayNode('client')
                     ->children()
                         ->scalarNode('deposit_number')->isRequired()->cannotBeEmpty()->end() // T8700

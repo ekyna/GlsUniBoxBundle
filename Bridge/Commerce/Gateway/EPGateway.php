@@ -20,5 +20,7 @@ class EPGateway extends AbstractGateway
         $request = parent::createRequest($shipment);
 
         $request->setService(Service::EP);
+
+        return $request;
     }
 }

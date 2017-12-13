@@ -10,9 +10,9 @@ use Ekyna\Component\Commerce\Shipment\Gateway\Action\ActionInterface;
 use Ekyna\Component\Commerce\Shipment\Gateway\Action\PrintLabel;
 use Ekyna\Component\GlsUniBox\Api\Service;
 use Ekyna\Component\GlsUniBox\Exception\InvalidArgumentException;
-use GuzzleHttp\Psr7\Response;
+use Ekyna\Component\GlsUniBox\Generator\NumberGenerator;
+use Ekyna\Component\GlsUniBox\Renderer\LabelRenderer;
 use Symfony\Component\Config\Definition;
-use Symfony\Component\Templating\EngineInterface;
 
 /**
  * Class GlsPlatform
@@ -24,14 +24,14 @@ class GlsPlatform extends AbstractPlatform
     const NAME = 'GLS';
 
     /**
-     * @var SettingsManagerInterface
+     * @var NumberGenerator
      */
-    private $settingManager;
+    protected $numberGenerator;
 
     /**
-     * @var EngineInterface
+     * @var SettingsManagerInterface
      */
-    private $templating;
+    protected $settingManager;
 
     /**
      * @var ConstantsHelper
@@ -47,19 +47,19 @@ class GlsPlatform extends AbstractPlatform
     /**
      * Constructor.
      *
+     * @param NumberGenerator          $numberGenerator
      * @param SettingsManagerInterface $settingManager
-     * @param EngineInterface          $templating
      * @param ConstantsHelper          $constantsHelper
      * @param array                    $defaultConfig
      */
     public function __construct(
+        NumberGenerator $numberGenerator,
         SettingsManagerInterface $settingManager,
-        EngineInterface $templating,
         ConstantsHelper $constantsHelper,
         array $defaultConfig = []
     ) {
+        $this->numberGenerator = $numberGenerator;
         $this->settingManager = $settingManager;
-        $this->templating = $templating;
         $this->constantsHelper = $constantsHelper;
         $this->defaultConfig = $defaultConfig;
     }
@@ -97,8 +97,8 @@ class GlsPlatform extends AbstractPlatform
         /** @var Gateway\AbstractGateway $gateway */
         $gateway = new $class($name, $this->processGatewayConfig($config));
 
+        $gateway->setNumberGenerator($this->numberGenerator);
         $gateway->setSettingManager($this->settingManager);
-        $gateway->setTemplating($this->templating);
         $gateway->setConstantsHelper($this->constantsHelper);
 
         return $gateway;
@@ -117,6 +117,7 @@ class GlsPlatform extends AbstractPlatform
      */
     protected function createConfigDefinition(Definition\Builder\NodeDefinition $rootNode)
     {
+        /** @noinspection PhpUndefinedMethodInspection */
         $rootNode
             ->children()
                 ->scalarNode('deposit_number')
@@ -141,14 +142,12 @@ class GlsPlatform extends AbstractPlatform
 
     /**
      * @param PrintLabel $action
-     *
-     * @return Response|null
      */
     protected function executePrintLabel(PrintLabel $action)
     {
-        $shipments = $action->getShipments();
+        $renderer = new LabelRenderer();
 
-        $labels = [];
+        $shipments = $action->getShipments();
 
         foreach ($shipments as $shipment) {
             if ($shipment->getPlatformName() !== static::NAME) {
@@ -160,21 +159,10 @@ class GlsPlatform extends AbstractPlatform
                 throw new \LogicException("Something almost impossible just append :-°");
             }
 
-            if (null !== $label = $gateway->buildLabel($shipment)) {
-                $labels[] = $label;
+            if (null !== $data = $gateway->buildLabelData($shipment)) {
+                $action->addLabel($renderer->render($data));
             }
         }
-
-        if (empty($labels)) {
-            return null;
-        }
-
-        /** @noinspection PhpTemplateMissingInspection */
-        $rendered = $this->templating->render('@GlsUniBox/labels.html.twig', [
-            'labels' => $labels
-        ]);
-
-        return new Response(200, ['Content-Type' => 'text/html'], $rendered);
     }
 
     /**

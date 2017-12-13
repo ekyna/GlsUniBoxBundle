@@ -23,5 +23,7 @@ class FDFGateway extends AbstractGateway
 
         // TODO make sure email is set (T1229)
         // TODO make sure mobile is set (T1230)
+
+        return $request;
     }
 }

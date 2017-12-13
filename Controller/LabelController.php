@@ -3,6 +3,7 @@
 namespace Ekyna\Bundle\GlsUniBoxBundle\Controller;
 
 use Ekyna\Component\GlsUniBox\Api\Response;
+use Ekyna\Component\GlsUniBox\Renderer\LabelRenderer;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 /**
@@ -25,8 +26,11 @@ EOT;
 
         $response = Response::create($exampleBody);
 
+        $renderer = new LabelRenderer();
+        $raw = $renderer->render($response->getData());
+
         return $this->render('EkynaGlsUniBoxBundle::debug.html.twig', [
-            'labels' => [$response->getData()],
+            'labels' => [base64_encode($raw)],
         ]);
     }
 }

@@ -24,5 +24,7 @@ class SHDGateway extends AbstractGateway
         // TODO make sure email is set (T1229)
         // TODO make sure mobile is set (T1230)
         // TODO make sure withdrawal point is set (T8237)
+
+        return $request;
     }
 }
