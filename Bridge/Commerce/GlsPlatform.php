@@ -2,6 +2,7 @@
 
 namespace Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper;
 use Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\Gateway\GlsGatewayInterface;
 use Ekyna\Bundle\SettingBundle\Manager\SettingsManagerInterface;
@@ -39,6 +40,11 @@ class GlsPlatform extends AbstractPlatform
     protected $constantsHelper;
 
     /**
+     * @var EntityManagerInterface
+     */
+    protected $entityManager;
+
+    /**
      * @var array
      */
     protected $defaultConfig;
@@ -50,18 +56,21 @@ class GlsPlatform extends AbstractPlatform
      * @param NumberGenerator          $numberGenerator
      * @param SettingsManagerInterface $settingManager
      * @param ConstantsHelper          $constantsHelper
+     * @param EntityManagerInterface   $entityManager
      * @param array                    $defaultConfig
      */
     public function __construct(
         NumberGenerator $numberGenerator,
         SettingsManagerInterface $settingManager,
         ConstantsHelper $constantsHelper,
+        EntityManagerInterface $entityManager,
         array $defaultConfig = []
     ) {
         $this->numberGenerator = $numberGenerator;
         $this->settingManager = $settingManager;
         $this->constantsHelper = $constantsHelper;
         $this->defaultConfig = $defaultConfig;
+        $this->entityManager = $entityManager;
     }
 
     /**
@@ -100,6 +109,7 @@ class GlsPlatform extends AbstractPlatform
         $gateway->setNumberGenerator($this->numberGenerator);
         $gateway->setSettingManager($this->settingManager);
         $gateway->setConstantsHelper($this->constantsHelper);
+        $gateway->setEntityManager($this->entityManager);
 
         return $gateway;
     }
@@ -179,7 +189,7 @@ class GlsPlatform extends AbstractPlatform
     public function getActions()
     {
         return [
-            PrintLabel::class
+            PrintLabel::class,
         ];
     }
 }

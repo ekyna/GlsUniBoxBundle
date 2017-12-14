@@ -2,6 +2,7 @@
 
 namespace Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\Gateway;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper;
 use Ekyna\Bundle\SettingBundle\Manager\SettingsManagerInterface;
 use Ekyna\Component\Commerce\Shipment\Gateway\AbstractGateway as BaseGateway;
@@ -42,6 +43,11 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     protected $constantsHelper;
 
     /**
+     * @var EntityManagerInterface
+     */
+    protected $entityManager;
+
+    /**
      * @var Api\Client
      */
     private $client;
@@ -80,6 +86,16 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     public function setConstantsHelper(ConstantsHelper $constantsHelper)
     {
         $this->constantsHelper = $constantsHelper;
+    }
+
+    /**
+     * Sets the entity manager.
+     *
+     * @param EntityManagerInterface $entityManager
+     */
+    public function setEntityManager(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
     }
 
     /**
@@ -176,9 +192,17 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
 
             // TODO Remove unnecessary data keys
 
+            // Set tracking number
+            if (isset($data[Api\Config::T8913])) {
+                $shipment->setTrackingNumber($data[Api\Config::T8913]);
+            }
+
             $shipment->setGatewayData($data);
 
-            // TODO persist shipment :s
+            // Persist shipment
+            $this->entityManager->persist($shipment);
+            /** @noinspection PhpMethodParametersCountMismatchInspection */
+            $this->entityManager->flush($shipment); // TODO Find a way to flush once all shipments
         }
     }
 
