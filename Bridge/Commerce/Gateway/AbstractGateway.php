@@ -12,7 +12,7 @@ use Ekyna\Component\Commerce\Shipment\Model\AddressResolverAwareInterface;
 use Ekyna\Component\Commerce\Shipment\Model\AddressResolverAwareTrait;
 use Ekyna\Component\Commerce\Shipment\Model\ShipmentInterface;
 use Ekyna\Component\GlsUniBox\Api;
-use Ekyna\Component\GlsUniBox\Generator\NumberGenerator;
+use Ekyna\Component\GlsUniBox\Generator\NumberGeneratorInterface;
 use Ekyna\Component\GlsUniBox\Renderer\LabelRenderer;
 use libphonenumber\PhoneNumber;
 use libphonenumber\PhoneNumberFormat;
@@ -28,7 +28,7 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     use AddressResolverAwareTrait;
 
     /**
-     * @var NumberGenerator
+     * @var NumberGeneratorInterface
      */
     protected $numberGenerator;
 
@@ -61,9 +61,9 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     /**
      * Sets the number generator.
      *
-     * @param NumberGenerator $numberGenerator
+     * @param NumberGeneratorInterface $numberGenerator
      */
-    public function setNumberGenerator($numberGenerator)
+    public function setNumberGenerator(NumberGeneratorInterface $numberGenerator)
     {
         $this->numberGenerator = $numberGenerator;
     }

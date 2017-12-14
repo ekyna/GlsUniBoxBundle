@@ -11,7 +11,7 @@ use Ekyna\Component\Commerce\Shipment\Gateway\Action\ActionInterface;
 use Ekyna\Component\Commerce\Shipment\Gateway\Action\PrintLabel;
 use Ekyna\Component\GlsUniBox\Api\Service;
 use Ekyna\Component\GlsUniBox\Exception\InvalidArgumentException;
-use Ekyna\Component\GlsUniBox\Generator\NumberGenerator;
+use Ekyna\Component\GlsUniBox\Generator\NumberGeneratorInterface;
 use Ekyna\Component\GlsUniBox\Renderer\LabelRenderer;
 use Symfony\Component\Config\Definition;
 
@@ -25,7 +25,7 @@ class GlsPlatform extends AbstractPlatform
     const NAME = 'GLS';
 
     /**
-     * @var NumberGenerator
+     * @var NumberGeneratorInterface
      */
     protected $numberGenerator;
 
@@ -53,14 +53,14 @@ class GlsPlatform extends AbstractPlatform
     /**
      * Constructor.
      *
-     * @param NumberGenerator          $numberGenerator
+     * @param NumberGeneratorInterface $numberGenerator
      * @param SettingsManagerInterface $settingManager
      * @param ConstantsHelper          $constantsHelper
      * @param EntityManagerInterface   $entityManager
      * @param array                    $defaultConfig
      */
     public function __construct(
-        NumberGenerator $numberGenerator,
+        NumberGeneratorInterface $numberGenerator,
         SettingsManagerInterface $settingManager,
         ConstantsHelper $constantsHelper,
         EntityManagerInterface $entityManager,
