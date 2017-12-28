@@ -7,6 +7,7 @@ use Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper;
 use Ekyna\Bundle\SettingBundle\Manager\SettingsManagerInterface;
 use Ekyna\Component\Commerce\Shipment\Gateway\AbstractGateway as BaseGateway;
 use Ekyna\Component\Commerce\Shipment\Gateway\Action\ActionInterface;
+use Ekyna\Component\Commerce\Shipment\Gateway\Action\ClearLabel;
 use Ekyna\Component\Commerce\Shipment\Gateway\Action\PrintLabel;
 use Ekyna\Component\Commerce\Shipment\Model\AddressResolverAwareInterface;
 use Ekyna\Component\Commerce\Shipment\Model\AddressResolverAwareTrait;
@@ -107,6 +108,8 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
 
         if ($action instanceof PrintLabel) {
             return $this->executePrintLabel($action);
+        } elseif ($action instanceof ClearLabel) {
+            return $this->executeClearLabel($action);
         }
 
         // TODO throw new UnsupportedShipmentAction();
@@ -119,7 +122,8 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
      */
     public function supports(ActionInterface $action)
     {
-        return $action instanceof PrintLabel;
+        return $action instanceof PrintLabel
+            || $action instanceof ClearLabel;
     }
 
     /**
@@ -129,6 +133,7 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     {
         $actions = [
             PrintLabel::class,
+            ClearLabel::class,
         ];
 
         /*if (null !== $shipment) {
@@ -170,6 +175,24 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
                 $action->addLabel($renderer->render($data));
             }
         }
+    }
+
+    /**
+     * @param ClearLabel $action
+     */
+    protected function executeClearLabel(ClearLabel $action)
+    {
+        $shipments = $action->getShipments();
+
+        foreach ($shipments as $shipment) {
+            $shipment
+                ->setGatewayData(null)
+                ->setTrackingNumber(null);
+
+            $this->entityManager->persist($shipment);
+        }
+
+        $this->entityManager->flush();
     }
 
     /**
