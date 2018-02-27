@@ -6,11 +6,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper;
 use Ekyna\Bundle\SettingBundle\Manager\SettingsManagerInterface;
 use Ekyna\Component\Commerce\Shipment\Gateway\AbstractGateway as BaseGateway;
-use Ekyna\Component\Commerce\Shipment\Gateway\Action\ActionInterface;
-use Ekyna\Component\Commerce\Shipment\Gateway\Action\ClearLabel;
-use Ekyna\Component\Commerce\Shipment\Gateway\Action\PrintLabel;
-use Ekyna\Component\Commerce\Shipment\Model\AddressResolverAwareInterface;
-use Ekyna\Component\Commerce\Shipment\Model\AddressResolverAwareTrait;
+use Ekyna\Component\Commerce\Shipment\Gateway\Action;
+use Ekyna\Component\Commerce\Shipment\Model as Shipment;
 use Ekyna\Component\Commerce\Shipment\Model\ShipmentInterface;
 use Ekyna\Component\GlsUniBox\Api;
 use Ekyna\Component\GlsUniBox\Generator\NumberGeneratorInterface;
@@ -24,9 +21,9 @@ use libphonenumber\PhoneNumberUtil;
  * @package Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\Gateway
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
-abstract class AbstractGateway extends BaseGateway implements AddressResolverAwareInterface, GlsGatewayInterface
+abstract class AbstractGateway extends BaseGateway implements Shipment\AddressResolverAwareInterface, GlsGatewayInterface
 {
-    use AddressResolverAwareTrait;
+    use Shipment\AddressResolverAwareTrait;
 
     /**
      * @var NumberGeneratorInterface
@@ -102,13 +99,13 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     /**
      * @inheritDoc
      */
-    public function execute(ActionInterface $action)
+    public function execute(Action\ActionInterface $action)
     {
         // TODO Simplify response data before storing it in Shipment::gatewayData ...
 
-        if ($action instanceof PrintLabel) {
+        if ($action instanceof Action\PrintLabel) {
             return $this->executePrintLabel($action);
-        } elseif ($action instanceof ClearLabel) {
+        } elseif ($action instanceof Action\ClearLabel) {
             return $this->executeClearLabel($action);
         }
 
@@ -120,20 +117,20 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     /**
      * @inheritDoc
      */
-    public function supports(ActionInterface $action)
+    public function supports(Action\ActionInterface $action)
     {
-        return $action instanceof PrintLabel
-            || $action instanceof ClearLabel;
+        return $action instanceof Action\PrintLabel
+            || $action instanceof Action\ClearLabel;
     }
 
     /**
      * @inheritDoc
      */
-    public function getActions(ShipmentInterface $shipment = null)
+    public function getActions(Shipment\ShipmentInterface $shipment = null)
     {
         $actions = [
-            PrintLabel::class,
-            ClearLabel::class,
+            Action\PrintLabel::class,
+            Action\ClearLabel::class,
         ];
 
         /*if (null !== $shipment) {
@@ -144,13 +141,25 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getTrackingUrl(ShipmentInterface $shipment)
+    {
+        if (!empty($number = $shipment->getTrackingNumber())) {
+            return 'https://gls-group.eu/FR/fr/suivi-colis?match=' . $number;
+        }
+
+        return null;
+    }
+
+    /**
      * Builds the label data for the given shipment.
      *
-     * @param ShipmentInterface $shipment
+     * @param Shipment\ShipmentInterface $shipment
      *
      * @return array|null
      */
-    public function buildLabelData(ShipmentInterface $shipment)
+    public function buildLabelData(Shipment\ShipmentInterface $shipment)
     {
         if ($shipment->getGatewayName() !== $this->getName()) {
             return null;
@@ -162,9 +171,9 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     }
 
     /**
-     * @param PrintLabel $action
+     * @param Action\PrintLabel $action
      */
-    protected function executePrintLabel(PrintLabel $action)
+    protected function executePrintLabel(Action\PrintLabel $action)
     {
         $renderer = new LabelRenderer();
 
@@ -178,9 +187,9 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     }
 
     /**
-     * @param ClearLabel $action
+     * @param Action\ClearLabel $action
      */
-    protected function executeClearLabel(ClearLabel $action)
+    protected function executeClearLabel(Action\ClearLabel $action)
     {
         $shipments = $action->getShipments();
 
@@ -198,9 +207,9 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     /**
      * Synchronise the gateway data if needed.
      *
-     * @param ShipmentInterface $shipment
+     * @param Shipment\ShipmentInterface $shipment
      */
-    protected function syncData(ShipmentInterface $shipment)
+    protected function syncData(Shipment\ShipmentInterface $shipment)
     {
         $data = $shipment->getGatewayData();
 
@@ -233,11 +242,11 @@ abstract class AbstractGateway extends BaseGateway implements AddressResolverAwa
     /**
      * Creates an api request.
      *
-     * @param ShipmentInterface $shipment
+     * @param Shipment\ShipmentInterface $shipment
      *
      * @return Api\Request
      */
-    protected function createRequest(ShipmentInterface $shipment)
+    protected function createRequest(Shipment\ShipmentInterface $shipment)
     {
         $sale = $shipment->getSale();
 
