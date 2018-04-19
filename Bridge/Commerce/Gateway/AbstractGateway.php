@@ -2,13 +2,12 @@
 
 namespace Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\Gateway;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper;
 use Ekyna\Bundle\SettingBundle\Manager\SettingsManagerInterface;
-use Ekyna\Component\Commerce\Shipment\Gateway\AbstractGateway as BaseGateway;
-use Ekyna\Component\Commerce\Shipment\Gateway\Action;
+use Ekyna\Component\Commerce\Exception\ShipmentGatewayException;
+use Ekyna\Component\Commerce\Shipment\Entity\AbstractShipmentLabel;
+use Ekyna\Component\Commerce\Shipment\Gateway;
 use Ekyna\Component\Commerce\Shipment\Model as Shipment;
-use Ekyna\Component\Commerce\Shipment\Model\ShipmentInterface;
 use Ekyna\Component\GlsUniBox\Api;
 use Ekyna\Component\GlsUniBox\Generator\NumberGeneratorInterface;
 use Ekyna\Component\GlsUniBox\Renderer\LabelRenderer;
@@ -21,9 +20,9 @@ use libphonenumber\PhoneNumberUtil;
  * @package Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\Gateway
  * @author  Etienne Dauvergne <contact@ekyna.com>
  */
-abstract class AbstractGateway extends BaseGateway implements Shipment\AddressResolverAwareInterface, GlsGatewayInterface
+abstract class AbstractGateway extends Gateway\AbstractGateway
 {
-    use Shipment\AddressResolverAwareTrait;
+    const TRACKING_URL = 'https://gls-group.eu/FR/fr/suivi-colis?match=%s';
 
     /**
      * @var NumberGeneratorInterface
@@ -39,11 +38,6 @@ abstract class AbstractGateway extends BaseGateway implements Shipment\AddressRe
      * @var ConstantsHelper
      */
     protected $constantsHelper;
-
-    /**
-     * @var EntityManagerInterface
-     */
-    protected $entityManager;
 
     /**
      * @var Api\Client
@@ -87,157 +81,142 @@ abstract class AbstractGateway extends BaseGateway implements Shipment\AddressRe
     }
 
     /**
-     * Sets the entity manager.
-     *
-     * @param EntityManagerInterface $entityManager
-     */
-    public function setEntityManager(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
-    }
-
-    /**
      * @inheritDoc
      */
-    public function execute(Action\ActionInterface $action)
+    public function getActions()
     {
-        // TODO Simplify response data before storing it in Shipment::gatewayData ...
-
-        if ($action instanceof Action\PrintLabel) {
-            return $this->executePrintLabel($action);
-        } elseif ($action instanceof Action\ClearLabel) {
-            return $this->executeClearLabel($action);
-        }
-
-        // TODO throw new UnsupportedShipmentAction();
-
-        return null;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function supports(Action\ActionInterface $action)
-    {
-        return $action instanceof Action\PrintLabel
-            || $action instanceof Action\ClearLabel;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getActions(Shipment\ShipmentInterface $shipment = null)
-    {
-        $actions = [
-            Action\PrintLabel::class,
-            Action\ClearLabel::class,
+        return [
+            Gateway\GatewayActions::SHIP,
+            Gateway\GatewayActions::CANCEL,
+            Gateway\GatewayActions::PRINT_LABEL,
+            //GatewayActions::TRACK,
         ];
-
-        /*if (null !== $shipment) {
-
-        }*/
-
-        return $actions;
     }
 
     /**
      * @inheritDoc
      */
-    public function getTrackingUrl(ShipmentInterface $shipment)
+    public function getCapabilities()
     {
-        if (!empty($number = $shipment->getTrackingNumber())) {
-            return 'https://gls-group.eu/FR/fr/suivi-colis?match=' . $number;
-        }
-
-        return null;
+        return static::CAPABILITY_SHIPMENT; // | static::CAPABILITY_PARCEL
     }
 
     /**
-     * Builds the label data for the given shipment.
-     *
-     * @param Shipment\ShipmentInterface $shipment
-     *
-     * @return array|null
+     * @inheritdoc
      */
-    public function buildLabelData(Shipment\ShipmentInterface $shipment)
+    public function ship(Shipment\ShipmentInterface $shipment)
     {
-        if ($shipment->getGatewayName() !== $this->getName()) {
-            return null;
+        $this->supportShipment($shipment);
+
+        if ($this->hasTrackingNumber($shipment)) {
+            return false;
         }
 
-        $this->syncData($shipment);
-
-        return $shipment->getGatewayData();
-    }
-
-    /**
-     * @param Action\PrintLabel $action
-     */
-    protected function executePrintLabel(Action\PrintLabel $action)
-    {
-        $renderer = new LabelRenderer();
-
-        $shipments = $action->getShipments();
-
-        foreach ($shipments as $shipment) {
-            if (null !== $data = $this->buildLabelData($shipment)) {
-                $action->addLabel($renderer->render($data));
-            }
-        }
-    }
-
-    /**
-     * @param Action\ClearLabel $action
-     */
-    protected function executeClearLabel(Action\ClearLabel $action)
-    {
-        $shipments = $action->getShipments();
-
-        foreach ($shipments as $shipment) {
-            $shipment
-                ->setGatewayData(null)
-                ->setTrackingNumber(null);
-
-            $this->entityManager->persist($shipment);
-        }
-
-        $this->entityManager->flush();
-    }
-
-    /**
-     * Synchronise the gateway data if needed.
-     *
-     * @param Shipment\ShipmentInterface $shipment
-     */
-    protected function syncData(Shipment\ShipmentInterface $shipment)
-    {
-        $data = $shipment->getGatewayData();
+        // TODO deal with parcels
 
         // TODO Check data validity/obsolescence (with hash ?)
-        if (empty($data)) {
-            $request = $this->createRequest($shipment);
-            $data = $request->getData();
+        $request = $this->createRequest($shipment);
 
+        $data = $request->getData();
+
+        try {
             $response = $this->getClient()->send($request);
-
-            $data = array_replace($data, $response->getData());
-
-            // TODO Remove unnecessary data keys
-
-            // Set tracking number
-            if (isset($data[Api\Config::T8913])) {
-                $shipment->setTrackingNumber($data[Api\Config::T8913]);
-            }
-
-            $shipment->setGatewayData($data);
-
-            // Persist shipment
-            $this->entityManager->persist($shipment);
-            /** @noinspection PhpMethodParametersCountMismatchInspection */
-            $this->entityManager->flush($shipment); // TODO Find a way to flush once all shipments
+        } catch (\Exception $e) {
+            throw new ShipmentGatewayException($e->getMessage(), $e->getCode(), $e);
         }
+
+        $data = array_replace($data, $response->getData());
+
+        if (!$response->isSuccessful()) {
+            throw new ShipmentGatewayException('Error code: ' . $response->getErrorCode());
+        }
+
+        // TODO Remove unnecessary data keys
+
+        // Set tracking number
+        if (isset($data[Api\Config::T8913])) {
+            $shipment->setTrackingNumber($data[Api\Config::T8913]);
+        }
+
+        $shipment->setGatewayData($data);
+
+        $this->persister->persist($shipment);
+
+        parent::ship($shipment);
+
+        return true;
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function track(Shipment\ShipmentDataInterface $shipment)
+    {
+        $this->supportShipment($shipment);
+
+        if (!empty($number = $shipment->getTrackingNumber())) {
+            return sprintf(static::TRACKING_URL, $number);
+        }
+
+        return null;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function printLabel(Shipment\ShipmentDataInterface $shipment, array $types = null)
+    {
+        $this->supportShipment($shipment);
+
+        if ($shipment instanceof Shipment\ShipmentParcelInterface) {
+            $s = $shipment->getShipment();
+        } else {
+            $s = $shipment;
+        }
+
+        /** @var Shipment\ShipmentInterface $s */
+        $this->ship($s);
+
+        if (empty($types)) {
+            $types = $this->getDefaultLabelTypes();
+        }
+
+        // TODO deal with parcels
+
+        if (!$shipment->hasLabels()) {
+            if (!empty($data = $s->getGatewayData())) {
+                $renderer = new LabelRenderer();
+                $shipment->addLabel(
+                    $this->createLabel(
+                        $renderer->render($data),
+                        AbstractShipmentLabel::TYPE_SHIPMENT,
+                        AbstractShipmentLabel::FORMAT_PNG,
+                        AbstractShipmentLabel::SIZE_A6
+                    )
+                );
+
+                $this->persister->persist($s);
+            }
+        }
+
+        foreach ($shipment->getLabels() as $label) {
+            if (in_array($label->getType(), $types, true)) {
+                return [$label];
+            }
+        }
+        
+        return [];
+    }
+
+    /**
+     * Returns the default label types.
+     *
+     * @return array
+     */
+    protected function getDefaultLabelTypes()
+    {
+        return [Shipment\ShipmentLabelInterface::TYPE_SHIPMENT];
+    }
 
     /**
      * Creates an api request.
@@ -255,6 +234,11 @@ abstract class AbstractGateway extends BaseGateway implements Shipment\AddressRe
 
         if (0 >= $weight = $shipment->getWeight()) {
             $weight = $this->weightCalculator->calculateShipment($shipment);
+        }
+
+        // Force weight > 100g
+        if (1 === bccomp(0.1, $weight, 2)) {
+            $weight = 0.1;
         }
 
         $request = new Api\Request($this->numberGenerator->generate());

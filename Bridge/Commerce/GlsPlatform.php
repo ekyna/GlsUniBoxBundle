@@ -2,17 +2,13 @@
 
 namespace Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper;
-use Ekyna\Bundle\GlsUniBoxBundle\Bridge\Commerce\Gateway\GlsGatewayInterface;
 use Ekyna\Bundle\SettingBundle\Manager\SettingsManagerInterface;
 use Ekyna\Component\Commerce\Shipment\Gateway\AbstractPlatform;
-use Ekyna\Component\Commerce\Shipment\Gateway\Action\ActionInterface;
-use Ekyna\Component\Commerce\Shipment\Gateway\Action\PrintLabel;
+use Ekyna\Component\Commerce\Shipment\Gateway\PlatformActions;
 use Ekyna\Component\GlsUniBox\Api\Service;
 use Ekyna\Component\GlsUniBox\Exception\InvalidArgumentException;
 use Ekyna\Component\GlsUniBox\Generator\NumberGeneratorInterface;
-use Ekyna\Component\GlsUniBox\Renderer\LabelRenderer;
 use Symfony\Component\Config\Definition;
 
 /**
@@ -40,11 +36,6 @@ class GlsPlatform extends AbstractPlatform
     protected $constantsHelper;
 
     /**
-     * @var EntityManagerInterface
-     */
-    protected $entityManager;
-
-    /**
      * @var array
      */
     protected $defaultConfig;
@@ -56,21 +47,18 @@ class GlsPlatform extends AbstractPlatform
      * @param NumberGeneratorInterface $numberGenerator
      * @param SettingsManagerInterface $settingManager
      * @param ConstantsHelper          $constantsHelper
-     * @param EntityManagerInterface   $entityManager
      * @param array                    $defaultConfig
      */
     public function __construct(
         NumberGeneratorInterface $numberGenerator,
         SettingsManagerInterface $settingManager,
         ConstantsHelper $constantsHelper,
-        EntityManagerInterface $entityManager,
         array $defaultConfig = []
     ) {
         $this->numberGenerator = $numberGenerator;
         $this->settingManager = $settingManager;
         $this->constantsHelper = $constantsHelper;
         $this->defaultConfig = $defaultConfig;
-        $this->entityManager = $entityManager;
     }
 
     /**
@@ -84,13 +72,11 @@ class GlsPlatform extends AbstractPlatform
     /**
      * @inheritDoc
      */
-    public function execute(ActionInterface $action)
+    public function getActions()
     {
-        if ($action instanceof PrintLabel) {
-            return $this->executePrintLabel($action);
-        }
-
-        return null;
+        return [
+            PlatformActions::PRINT_LABELS,
+        ];
     }
 
     /**
@@ -104,12 +90,11 @@ class GlsPlatform extends AbstractPlatform
         }
 
         /** @var Gateway\AbstractGateway $gateway */
-        $gateway = new $class($name, $this->processGatewayConfig($config));
+        $gateway = new $class($this, $name, $this->processGatewayConfig($config));
 
         $gateway->setNumberGenerator($this->numberGenerator);
         $gateway->setSettingManager($this->settingManager);
         $gateway->setConstantsHelper($this->constantsHelper);
-        $gateway->setEntityManager($this->entityManager);
 
         return $gateway;
     }
@@ -148,48 +133,5 @@ class GlsPlatform extends AbstractPlatform
                     ->isRequired()
                 ->end()
             ->end();
-    }
-
-    /**
-     * @param PrintLabel $action
-     */
-    protected function executePrintLabel(PrintLabel $action)
-    {
-        $renderer = new LabelRenderer();
-
-        $shipments = $action->getShipments();
-
-        foreach ($shipments as $shipment) {
-            if ($shipment->getPlatformName() !== static::NAME) {
-                continue;
-            }
-
-            $gateway = $this->registry->getGateway($shipment->getGatewayName());
-            if (!$gateway instanceof GlsGatewayInterface) {
-                throw new \LogicException("Something almost impossible just append :-°");
-            }
-
-            if (null !== $data = $gateway->buildLabelData($shipment)) {
-                $action->addLabel($renderer->render($data));
-            }
-        }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function supports(ActionInterface $action)
-    {
-        return $action instanceof PrintLabel;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getActions()
-    {
-        return [
-            PrintLabel::class,
-        ];
     }
 }
