@@ -32,7 +32,7 @@ class EkynaGlsUniBoxExtension extends Extension
         $platformDef->addTag('ekyna_commerce.shipment.gateway_platform');
         $platformDef->addArgument(new Reference('ekyna_gls_uni_box.number_generator'));
         $platformDef->addArgument(new Reference('ekyna_setting.manager'));
-        $platformDef->addArgument(new Reference('ekyna_commerce.constants_helper'));
+        $platformDef->addArgument(new Reference('Ekyna\Bundle\CommerceBundle\Service\ConstantsHelper'));
         $platformDef->addArgument($config['client']);
         $container->setDefinition('ekyna_gls_uni_box.gateway_platform', $platformDef);
     }
