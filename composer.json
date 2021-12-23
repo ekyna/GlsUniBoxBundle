@@ -19,7 +19,7 @@
     "require": {
         "php": ">=7.4",
         "ekyna/commerce-bundle": "0.8.x-dev",
-        "ekyna/gls-uni-box": "0.7.x-dev"
+        "ekyna/gls-uni-box": "0.8.x-dev"
     },
     "autoload": {
         "psr-4": {
